@@ -13,13 +13,60 @@ perf or oprofile.
 Usage
 -----
 
+Install kernel module:
+
 make KSRC=/lib/modules/$(uname -r)/build
 (or make KSRC=/your/kernel/source or objdir)
 
 su
 make modules_install
 
+Install header files:
 
+make install
 
+Application usage
+-----------------
 
- 
+Load the kernel module
+
+modprobe simple-pmu
+
+Measuring cycles:
+
+#include "cycles.h"
+
+...
+
+counter_t a, b;
+
+if (perfmon_available() == 0) ... exit...
+
+sync_core();
+a = unhalted_core();
+<code to measure>
+b = unhalted_core();
+sync_core();
+printf("%llu cycles\n", b - a);
+
+Measuring retired instructions:
+
+#include "cycles.h"
+
+counter_t a, b;
+
+if (perfmon_available() == 0) ... exit...
+
+sync_core();
+a = insn_retired();
+<code to measure>
+b = insn_retired();
+sync_core();
+printf("%llu instructions\n", b - a);
+
+Caveats
+=======
+
+The program should run on the same CPU during the measuremnt, for example
+using taskset
+
