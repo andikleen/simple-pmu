@@ -12,4 +12,8 @@ install:
 clean:
 	${M} clean
 
+tcyc: tcyc.c cycles.h
+	gcc -o tcyc tcyc.c -Wall -O2
 
+
+	

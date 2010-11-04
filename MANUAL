@@ -1,0 +1,25 @@
+simple-pmu
+----------
+
+This is a simple Intel PMU driver that allows to read fixed counters
+from user space.
+    
+Useful to measure cycles without worrying about Turbo mode and p-states.
+Essentially this is a replacement for RDTSC for performance analysis.
+    
+It doesn't attempt to compete with any of the big PMU guys like
+perf or oprofile.
+   
+Usage
+-----
+
+make KSRC=/lib/modules/$(uname -r)/build
+(or make KSRC=/your/kernel/source or objdir)
+
+su
+make modules_install
+
+
+
+
+ 

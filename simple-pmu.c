@@ -20,7 +20,6 @@
 static unsigned long counter_mask;
 static int num_counter;
 
-static int reset;
 static int ring = 3;
 static int rdpmc_fixed = 1;
 
@@ -47,6 +46,8 @@ static void simple_pmu_cpu_init(void *arg)
 	u32 cr4;
 	unsigned r = (ring & 0x3);
 	int err;
+
+	printk("simple pmu cpu init cpu %d %d\n", smp_processor_id(), enable);
 
 	err = rdmsrl_safe(MSR_CORE_PERF_FIXED_CTR_CTRL, &fc);
 	err |= rdmsrl_safe(MSR_CORE_PERF_GLOBAL_CTRL, &gc);
@@ -124,14 +125,6 @@ static void query_cpu(void)
 	u32 mask;
 
 	cpuid(0xa, &eax.val, &ebx, &tmp, &edx);
-
-	/* Work around Yonah bug */
-	if (boot_cpu_data.x86_vendor == X86_VENDOR_INTEL &&
-		boot_cpu_data.x86 == 6 &&
-		boot_cpu_data.x86_model == 15)
-		eax.f.version = 2;
-	if (eax.f.version < 2)
-		return;
 
 	num_counter = min_t(unsigned, ARRAY_SIZE(fixed_ctr), edx & 0xf);
 	mask = (~ebx) & ((1UL << eax.f.mask_bitlength)-1);
@@ -212,8 +205,6 @@ static int simple_pmu_resume(struct sys_device *dev)
 	return 0;
 }
 
-/* A kingdom for a linux OO system that actually works! */
-
 struct spmu_attr {
 	struct sysdev_class_attribute attr;
 	int *var;
@@ -268,11 +259,9 @@ static struct spmu_attr name##_attr = { 				\
 
 SPMU_ATTR(rdpmc_fixed);
 SPMU_ATTR(ring);
-SPMU_ATTR(reset);
 
 static struct sysdev_class_attribute *spmu_attr[] = {
 	&ring_attr.attr,
-	&reset_attr.attr,
 	&rdpmc_fixed_attr.attr,
 	NULL
 };
@@ -296,7 +285,6 @@ static int simple_pmu_init(void)
 	if (err)
 		return err;
 
-	/* Convert to sysdev_class->attrs link in 2.6.34 */
 	ko = &spmu_sysdev_class.kset.kobj;
 	for (i = 0; spmu_attr[i] && !err; i++)
 		err = sysfs_create_file(ko, &spmu_attr[i]->attr);
