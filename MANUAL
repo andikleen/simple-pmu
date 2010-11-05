@@ -6,8 +6,9 @@ from user space.
     
 Useful to measure cycles without worrying about Turbo mode and p-states.
 Essentially this is a replacement for RDTSC for performance analysis.
+This has lower overhead than classic RDTSC.
     
-It doesn't attempt to compete with any of the big PMU guys like
+It doesn't attempt to compete with any of the big PMU boys like
 perf or oprofile.
    
 Usage
@@ -15,9 +16,8 @@ Usage
 
 Install kernel module:
 
-make KSRC=/lib/modules/$(uname -r)/build
-(or make KSRC=/your/kernel/source or objdir)
-
+make
+(or make KDIR=/your/kernel/source or objdir)
 su
 make modules_install
 
@@ -48,6 +48,9 @@ a = unhalted_core();
 b = unhalted_core();
 sync_core();
 printf("%llu cycles\n", b - a);
+
+The sync_core()s are needed to prevent an out of order CPU from 
+moving instructions outside the measurement window. 
 
 Measuring retired instructions:
 

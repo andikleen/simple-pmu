@@ -17,6 +17,12 @@
 #include <asm/msr.h>
 #include <asm/nmi.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
+#define SMP_CALL_ARG 1, 1
+#else
+#define SMP_CALL_ARG 1
+#endif
+
 static unsigned long counter_mask;
 static int num_counter;
 
@@ -99,7 +105,8 @@ simple_pmu_cpuhandler(struct notifier_block *nb, unsigned long action, void *v)
 	default:
 		return NOTIFY_OK;
 	}
-	smp_call_function_single(cpu, simple_pmu_cpu_init, enable, 1);
+	smp_call_function_single(cpu, simple_pmu_cpu_init,
+				 enable, SMP_CALL_ARG);
 	return NOTIFY_DONE;
 }
 
@@ -173,14 +180,14 @@ static void restart(enum rflags rflags)
 	mutex_lock(&restart_lock);
 	enable = rdpmc_fixed;
 	if ((rflags & R_UNINIT) && ((prev && enable) || !enable)) {
-		on_each_cpu(simple_pmu_cpu_init, NULL, 1);
+		on_each_cpu(simple_pmu_cpu_init, NULL, SMP_CALL_ARG);
 		if (rflags & R_RESERVE)
 			unreserve_counters();
 	}
 	if (enable) {
 		if (rflags & R_RESERVE)
 			reserve_counters();
-		on_each_cpu(simple_pmu_cpu_init, (void *)1L, 1);
+		on_each_cpu(simple_pmu_cpu_init, (void *)1L, SMP_CALL_ARG);
 	}
 	prev = enable;
 	mutex_unlock(&restart_lock);

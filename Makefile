@@ -1,4 +1,4 @@
-KDIR = ~/lsrc/obj-2.6.36-full
+KDIR = /lib/modules/`uname -r`/build
 obj-m := simple-pmu.o
 M := make -C ${KDIR} M=`pwd`
 
