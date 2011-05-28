@@ -7,9 +7,11 @@ from user space.
 Useful to measure cycles without worrying about Turbo mode and p-states.
 Essentially this is a replacement for RDTSC for performance analysis.
 This has lower overhead than classic RDTSC.
+
+Can be only used by writing code.
     
-It doesn't attempt to compete with any of the big PMU boys like
-perf or oprofile.
+Doesn't attempt to compete with any of the big PMU boys like
+perf or oprofile, it just aims to be a RDTSC replacement.
    
 Usage
 -----
@@ -70,6 +72,6 @@ printf("%llu instructions\n", b - a);
 Caveats
 =======
 
-The program should run on the same CPU during the measuremnt, for example
+The program should run on the same CPU core during the measuremnt, for example
 using taskset
 
