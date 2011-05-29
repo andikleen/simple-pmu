@@ -2,6 +2,7 @@
  * Simple PMU driver.
  * Enable fixed counters on Intel CPUs and let them be read
  * by RDPMC in ring 3.
+ * Author: Andi Kleen
  */
 #include <linux/version.h>
 #include <linux/moduleparam.h>
