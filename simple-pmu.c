@@ -213,13 +213,13 @@ static int simple_pmu_resume(struct sys_device *dev)
 }
 
 struct spmu_attr {
-	struct sysdev_class_attribute attr;
+	struct sysdev_attribute attr;
 	int *var;
 };
 
 static ssize_t
-spmu_attr_store(struct sysdev_class *c, struct sysdev_class_attribute *a,
-		   const char *buf, size_t size)
+spmu_attr_store(struct sys_device *c, struct sysdev_attribute *a,
+		const char *buf, size_t size)
 {
 	struct spmu_attr *sa = container_of(a, struct spmu_attr, attr);
 	char *end;
@@ -231,9 +231,8 @@ spmu_attr_store(struct sysdev_class *c, struct sysdev_class_attribute *a,
 	return size;
 }
 
-static ssize_t spmu_attr_show(struct sysdev_class *c,
-			      struct sysdev_class_attribute *a,
-			      char *buf)
+static ssize_t 
+spmu_attr_show(struct sys_device *c, struct sysdev_attribute *a, char *buf)
 {
 	struct spmu_attr *sa = container_of(a, struct spmu_attr, attr);
 	return snprintf(buf, PAGE_SIZE, "%d", *(sa->var));
@@ -242,24 +241,24 @@ static ssize_t spmu_attr_show(struct sysdev_class *c,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
 #define SPMU_ATTR(name) \
 static struct spmu_attr name##_attr;					\
-static ssize_t name##_store(struct sysdev_class *c, const char *buf,	\
+static ssize_t name##_store(struct sys_device *c, const char *buf,		\
 			   size_t size)					\
 {									\
 	return spmu_attr_store(c, &name##_attr.attr, buf, size);	\
 }									\
 									\
-static ssize_t name##_show(struct sysdev_class *c, char *buf)		\
+static ssize_t name##_show(struct sys_device *c, char *buf)			\
 {									\
 	return spmu_attr_show(c, &name##_attr.attr, buf);		\
 }									\
 static struct spmu_attr name##_attr = { 				\
-	_SYSDEV_CLASS_ATTR(name, 0644, name##_show, name##_store),	\
+	_SYSDEV_ATTR(name, 0644, name##_show, name##_store),		\
 	&name								\
 };
 #else
 #define SPMU_ATTR(name) 						\
 static struct spmu_attr name##_attr = { 				\
-	_SYSDEV_CLASS_ATTR(name, 0644, spmu_attr_show, spmu_attr_store),\
+	_SYSDEV_ATTR(name, 0644, spmu_attr_show, spmu_attr_store),	\
 	&name,								\
 }
 #endif
@@ -267,7 +266,7 @@ static struct spmu_attr name##_attr = { 				\
 SPMU_ATTR(rdpmc_fixed);
 SPMU_ATTR(ring);
 
-static struct sysdev_class_attribute *spmu_attr[] = {
+static struct sysdev_attribute *spmu_attr[] = {
 	&ring_attr.attr,
 	&rdpmc_fixed_attr.attr,
 	NULL
@@ -279,11 +278,14 @@ static struct sysdev_class spmu_sysdev_class = {
 	.resume = simple_pmu_resume
 };
 
+static struct sys_device spmu_sysdev = {
+	.cls = &spmu_sysdev_class,
+};
+
 static int simple_pmu_init(void)
 {
 	int err;
 	int i;
-	struct kobject *ko;
 
 	if (!boot_cpu_has(X86_FEATURE_ARCH_PERFMON) || cpuid_eax(0) < 0xa)
 		return -ENODEV;
@@ -292,12 +294,16 @@ static int simple_pmu_init(void)
 	if (err)
 		return err;
 
-	ko = &spmu_sysdev_class.kset.kobj;
+	err = sysdev_register(&spmu_sysdev);
+	if (err)
+		goto err_class;
+
 	for (i = 0; spmu_attr[i] && !err; i++)
-		err = sysfs_create_file(ko, &spmu_attr[i]->attr);
+		err = sysdev_create_file(&spmu_sysdev, spmu_attr[i]);
 	if (err) {
 		while (--i >= 0)
-			sysfs_remove_file(ko, &spmu_attr[i]->attr);
+			sysdev_remove_file(&spmu_sysdev, spmu_attr[i]);
+	err_class:
 		sysdev_class_unregister(&spmu_sysdev_class);
 		return err;
 	}
@@ -312,8 +318,8 @@ static void simple_pmu_exit(void)
 	int i;
 
 	for (i = 0; spmu_attr[i]; i++)
-		sysfs_remove_file(&spmu_sysdev_class.kset.kobj,
-				  &spmu_attr[i]->attr);
+		sysdev_remove_file(&spmu_sysdev, spmu_attr[i]);
+	sysdev_unregister(&spmu_sysdev);
 	sysdev_class_unregister(&spmu_sysdev_class);
 	unregister_cpu_notifier(&cpu_notifier);
 	rdpmc_fixed = 0;
