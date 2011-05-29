@@ -70,6 +70,7 @@ Measuring retired instructions:
 
 counter_t a, b;
 
+pin_cpu(NULL);
 if (perfmon_available() == 0) ... exit...
 
 sync_core();
@@ -79,8 +80,30 @@ b = insn_retired();
 sync_core();
 printf("%llu instructions\n", b - a);
 
+unhalted_ref() is also available. Since Nehalem this does nothing.
+Before nehalem it would count frontside bus cycles.
+
+rdtsc() and rdtscp() (RDTSC with synchronization) are also available,
+however for those all the caveats described at the beginning apply.
+
+Kernel interface
+----------------
+
+The exporting of the various counters can be controlled through
+/sys/devices/system/simple-pmu/simple-pmu0/
+
+ring  
+The ring the counters are exported to. Default to 3.
+
+rdpmc_fixed
+If not zero start the fixed counters
+
 Notes
 -----
 
 #define _GNU_SOURCE 1 must be defined at the beginning of the 
 source files that include cycles.h
+
+There is currently no allocation for the fixed counters, which
+are also used by perf and other profilers. Don't use those in parallel.
+Interaction with oprofile is fine.

@@ -11,6 +11,7 @@ install:
 
 clean:
 	${M} clean
+	rm -f tcyc
 
 tcyc: tcyc.c cycles.h
 	gcc -o tcyc tcyc.c -Wall -O2
