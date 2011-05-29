@@ -1,10 +1,9 @@
+/* Demo program for simple-pmu */
 #define _GNU_SOURCE 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <sched.h>
 #include "cycles.h"
-
-volatile float f;
 
 static inline void kernel(void)
 {
@@ -53,6 +52,12 @@ int main(void)
 	b = rdtsc();
 	printf("rdtsc tick %llu\n", b-a);
 
+#if 0 /* Not available before Nehalem */
+	a = rdtscp();
+	kernel();
+	b = rdtscp();
+	printf("rdtsc tick %llu\n", b-a);
+#endif
 	return 0;	
 
 }

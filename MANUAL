@@ -39,6 +39,8 @@ modprobe simple-pmu
 
 Measuring cycles:
 
+Copy cycles.h somewhere where your application can find it with -I..
+
 #define _GNU_SOURCE 1
 ...
 #include "cycles.h"
@@ -100,6 +102,8 @@ If not zero start the fixed counters
 
 Notes
 -----
+tcyc.c is a simple demo program showing (nearly) all the cycles.h
+features.  You can build it with "make tcyc"
 
 #define _GNU_SOURCE 1 must be defined at the beginning of the 
 source files that include cycles.h
@@ -107,3 +111,8 @@ source files that include cycles.h
 There is currently no allocation for the fixed counters, which
 are also used by perf and other profilers. Don't use those in parallel.
 Interaction with oprofile is fine.
+
+Author
+------
+
+simple-pmu was written by Andi Kleen <andi@firstfloor.org>
