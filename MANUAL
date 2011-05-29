@@ -4,7 +4,7 @@ simple-pmu
 This is a simple Intel PMU driver that allows to read fixed counters
 from user space.
     
-Useful to measure cycles without worrying about Turbo mode and p-states.
+Useful to measure cycles without worrying about Turbo mode and p-states
 Essentially this is a replacement for RDTSC for performance analysis.
 This has lower overhead than classic RDTSC.
 
@@ -12,6 +12,9 @@ Can be only used by writing code.
     
 Doesn't attempt to compete with any of the big PMU boys like
 perf or oprofile, it just aims to be a RDTSC replacement.
+
+This works currently only on modern Intel CPUs (anything with
+"arch_perfmon" in /proc/cpuinfo)
    
 Usage
 -----
@@ -36,12 +39,15 @@ modprobe simple-pmu
 
 Measuring cycles:
 
+#define _GNU_SOURCE 1
+...
 #include "cycles.h"
 
 ...
 
 counter_t a, b;
 
+pin_cpu(NULL);
 if (perfmon_available() == 0) ... exit...
 
 sync_core();
@@ -53,6 +59,10 @@ printf("%llu cycles\n", b - a);
 
 The sync_core()s are needed to prevent an out of order CPU from 
 moving instructions outside the measurement window. 
+pin_cpu() pins the thread to the current CPU because CPU changes
+could cause mismeasurements. You can call unpin_cpu()
+afterwards to unpin. For this it is needed to pass a cpu_set_t
+to pin_cpu() and afterwards to unpin_cpu().
 
 Measuring retired instructions:
 
@@ -69,9 +79,8 @@ b = insn_retired();
 sync_core();
 printf("%llu instructions\n", b - a);
 
-Caveats
-=======
+Notes
+-----
 
-The program should run on the same CPU core during the measuremnt, for example
-using taskset
-
+#define _GNU_SOURCE 1 must be defined at the beginning of the 
+source files that include cycles.h
