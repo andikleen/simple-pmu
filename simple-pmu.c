@@ -242,7 +242,7 @@ spmu_attr_show(struct sys_device *c, struct sysdev_attribute *a, char *buf)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
 #define SPMU_ATTR(name) \
 static struct spmu_attr name##_attr;					\
-static ssize_t name##_store(struct sys_device *c, const char *buf,		\
+static ssize_t name##_store(struct sys_device *c, const char *buf,	\
 			   size_t size)					\
 {									\
 	return spmu_attr_store(c, &name##_attr.attr, buf, size);	\
