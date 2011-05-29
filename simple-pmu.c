@@ -274,6 +274,9 @@ static struct sysdev_attribute *spmu_attr[] = {
 
 static struct sysdev_class spmu_sysdev_class = {
 	.name = "simple-pmu",
+};
+
+static struct sysdev_driver spmu_sysdev_driver = {
 	.suspend = simple_pmu_suspend,
 	.resume = simple_pmu_resume
 };
@@ -298,19 +301,28 @@ static int simple_pmu_init(void)
 	if (err)
 		goto err_class;
 
+	err = sysdev_driver_register(&spmu_sysdev_class, &spmu_sysdev_driver);
+	if (err)
+		goto err_sysdev;
+
 	for (i = 0; spmu_attr[i] && !err; i++)
 		err = sysdev_create_file(&spmu_sysdev, spmu_attr[i]);
-	if (err) {
-		while (--i >= 0)
-			sysdev_remove_file(&spmu_sysdev, spmu_attr[i]);
-	err_class:
-		sysdev_class_unregister(&spmu_sysdev_class);
-		return err;
-	}
+	if (err)
+		goto error_file;
 
 	restart(R_RESERVE);
 	register_cpu_notifier(&cpu_notifier);
 	return 0;
+
+error_file:
+	while (--i >= 0)
+		sysdev_remove_file(&spmu_sysdev, spmu_attr[i]);
+	sysdev_driver_unregister(&spmu_sysdev_class, &spmu_sysdev_driver);
+err_sysdev:
+	sysdev_unregister(&spmu_sysdev);
+err_class:
+	sysdev_class_unregister(&spmu_sysdev_class);
+	return err;
 }
 
 static void simple_pmu_exit(void)
@@ -320,6 +332,7 @@ static void simple_pmu_exit(void)
 	for (i = 0; spmu_attr[i]; i++)
 		sysdev_remove_file(&spmu_sysdev, spmu_attr[i]);
 	sysdev_unregister(&spmu_sysdev);
+	sysdev_driver_unregister(&spmu_sysdev_class, &spmu_sysdev_driver);
 	sysdev_class_unregister(&spmu_sysdev_class);
 	unregister_cpu_notifier(&cpu_notifier);
 	rdpmc_fixed = 0;
