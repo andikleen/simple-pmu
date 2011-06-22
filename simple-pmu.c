@@ -1,8 +1,13 @@
 /*
- * Simple PMU driver.
- * Enable fixed counters on Intel CPUs and let them be read
- * by RDPMC in ring 3.
+ * Copyright (C) 2010, 2011 Intel Corporation
  * Author: Andi Kleen
+ *
+ * This software may be redistributed and/or modified under the terms of
+ * the GNU General Public License ("GPL") version 2 only as published by the
+ * Free Software Foundation.
+ *
+ * Simple PMU driver for no overhead self-monitoring.
+ * Enable fixed counters on Intel CPUs and let them be read by RDPMC in ring 3.
  */
 #include <linux/version.h>
 #include <linux/moduleparam.h>
