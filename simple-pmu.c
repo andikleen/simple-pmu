@@ -283,7 +283,7 @@ static struct sysdev_class spmu_sysdev_class = {
 };
 
 static struct sysdev_driver spmu_sysdev_driver = {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38)
 	/* FIXME: need a replacement. */
 	.suspend = simple_pmu_suspend,
 	.resume = simple_pmu_resume
