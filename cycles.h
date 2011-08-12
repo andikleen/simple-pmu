@@ -46,9 +46,7 @@ static inline unsigned p_cpuid_a(unsigned in)
 
 static inline force_inline void sync_core(void)
 {
-	unsigned a, b, c, d;
-	asm volatile("cpuid" : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
-		    	     : "0" (0) : "memory");
+	asm volatile("lfence" ::: "memory");
 }
 
 static inline force_inline unsigned long long p_rdpmc(unsigned in)
