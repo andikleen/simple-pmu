@@ -25,6 +25,7 @@
 
 #define _GNU_SOURCE 1
 #include <sched.h>
+#include <unistd.h>
 
 #define force_inline __attribute__((always_inline))
 
@@ -60,6 +61,9 @@ static inline force_inline unsigned long long p_rdpmc(unsigned in)
 static inline int perfmon_available(void)
 {
 	unsigned eax;
+	
+	if (access("/sys/devices/system/simple-pmu/simple-pmu0", R_OK) < 0)
+		return 0;
 	if (p_cpuid_a(0) < 10)
 		return 0;
 	eax = p_cpuid_a(10);
